@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Traffic System — Data Flow Diagram</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e1a;
+            color: #e0e6f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }
+
+        header {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 40px 20px 20px;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 1rem;
+            color: #94a3b8;
+            font-weight: 300;
+        }
+
+        .diagram-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        svg.flow-svg {
+            width: 100%;
+            height: 620px;
+        }
+
+        /* Node Styles */
+        .node-group { cursor: pointer; }
+
+        .node-box {
+            rx: 16;
+            ry: 16;
+            filter: drop-shadow(0 4px 20px rgba(0,0,0,0.4));
+            transition: filter 0.3s, transform 0.3s;
+        }
+
+        .node-group:hover .node-box {
+            filter: drop-shadow(0 6px 30px rgba(56, 189, 248, 0.3));
+        }
+
+        .node-title {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            fill: #fff;
+        }
+
+        .node-subtitle {
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            font-size: 11px;
+            fill: rgba(255,255,255,0.7);
+        }
+
+        .node-icon {
+            font-size: 28px;
+        }
+
+        /* Arrow animation */
+        .flow-arrow {
+            stroke-dasharray: 8 4;
+            animation: flowDash 1s linear infinite;
+        }
+
+        @keyframes flowDash {
+            to { stroke-dashoffset: -12; }
+        }
+
+        /* Pulse animation on sensor nodes */
+        .pulse-ring {
+            animation: pulseRing 2s ease-out infinite;
+            transform-origin: center;
+        }
+
+        @keyframes pulseRing {
+            0% { r: 8; opacity: 0.6; }
+            100% { r: 24; opacity: 0; }
+        }
+
+        /* Detail panel */
+        .detail-panel {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(100%);
+            width: 90%;
+            max-width: 600px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 20px 20px 0 0;
+            padding: 28px 32px;
+            backdrop-filter: blur(20px);
+            z-index: 10;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .detail-panel.active {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .detail-panel h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #38bdf8;
+        }
+
+        .detail-panel p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+
+        .detail-panel .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+
+        .detail-panel .close-btn:hover { color: #f87171; }
+
+        /* Legend */
+        .legend {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto 40px;
+            padding: 0 20px;
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+
+    <header>
+        <h1>🚦 Data Flow Architecture</h1>
+        <p>From road sensors to AI-powered signal control — click any node for details</p>
+    </header>
+
+    <div class="diagram-container">
+        <svg class="flow-svg" viewBox="0 0 1100 600">
+            <defs>
+                <linearGradient id="grad-sensor" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#0284c7;stop-opacity:1"/>
+                </linearGradient>
+                <linearGradient id="grad-aggregator" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1"/>
+                </linearGradient>
+                <linearGradient id="grad-processor" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#d97706;stop-opacity:1"/>
+                </linearGradient>
+                <linearGradient id="grad-ai" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#10b981;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#059669;stop-opacity:1"/>
+                </linearGradient>
+                <linearGradient id="grad-signal" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#f43f5e;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#e11d48;stop-opacity:1"/>
+                </linearGradient>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#475569"/>
+                </marker>
+            </defs>
+
+            <!-- ===== FLOW ARROWS ===== -->
+            <!-- Sensor nodes to Aggregator -->
+            <line x1="195" y1="95" x2="370" y2="220" class="flow-arrow" stroke="#475569" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <line x1="195" y1="235" x2="370" y2="245" class="flow-arrow" stroke="#475569" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <line x1="195" y1="375" x2="370" y2="270" class="flow-arrow" stroke="#475569" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <line x1="195" y1="505" x2="370" y2="290" class="flow-arrow" stroke="#475569" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+            <!-- Aggregator to Processor -->
+            <line x1="540" y1="260" x2="590" y2="260" class="flow-arrow" stroke="#475569" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+
+            <!-- Processor to AI Engine -->
+            <line x1="770" y1="260" x2="820" y2="260" class="flow-arrow" stroke="#475569" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+
+            <!-- AI Engine to Signal Controller -->
+            <line x1="950" y1="330" x2="950" y2="400" class="flow-arrow" stroke="#475569" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+
+            <!-- Feedback loop -->
+            <path d="M 900 480 Q 550 560 195 505" fill="none" class="flow-arrow" stroke="rgba(248,113,113,0.4)" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrowhead)"/>
+            <text x="500" y="555" font-family="Inter" font-size="10" fill="#f87171" text-anchor="middle">Feedback Loop (updated traffic state)</text>
+
+            <!-- ===== SENSOR NODES ===== -->
+            <!-- Inductive Loops -->
+            <g class="node-group" data-node="loops">
+                <circle class="pulse-ring" cx="30" cy="95" fill="none" stroke="#0ea5e9" stroke-width="1"/>
+                <rect class="node-box" x="20" y="55" width="175" height="80" fill="url(#grad-sensor)"/>
+                <text class="node-icon" x="35" y="100">〰️</text>
+                <text class="node-title" x="70" y="90">Inductive Loops</text>
+                <text class="node-subtitle" x="70" y="108">Vehicle presence detection</text>
+            </g>
+
+            <!-- CCTV Cameras -->
+            <g class="node-group" data-node="cctv">
+                <circle class="pulse-ring" cx="30" cy="235" fill="none" stroke="#0ea5e9" stroke-width="1"/>
+                <rect class="node-box" x="20" y="195" width="175" height="80" fill="url(#grad-sensor)"/>
+                <text class="node-icon" x="35" y="240">📹</text>
+                <text class="node-title" x="70" y="230">CCTV Cameras</text>
+                <text class="node-subtitle" x="70" y="248">Video analytics (YOLO)</text>
+            </g>
+
+            <!-- GPS Probes -->
+            <g class="node-group" data-node="gps">
+                <circle class="pulse-ring" cx="30" cy="375" fill="none" stroke="#0ea5e9" stroke-width="1"/>
+                <rect class="node-box" x="20" y="335" width="175" height="80" fill="url(#grad-sensor)"/>
+                <text class="node-icon" x="35" y="380">📡</text>
+                <text class="node-title" x="70" y="370">GPS Probes</text>
+                <text class="node-subtitle" x="70" y="388">Ride-hailing & fleet data</text>
+            </g>
+
+            <!-- Weather API -->
+            <g class="node-group" data-node="weather">
+                <rect class="node-box" x="20" y="470" width="175" height="80" fill="url(#grad-sensor)"/>
+                <text class="node-icon" x="35" y="515">🌧️</text>
+                <text class="node-title" x="70" y="505">Weather API</text>
+                <text class="node-subtitle" x="70" y="523">IMD / OpenWeather</text>
+            </g>
+
+            <!-- ===== DATA AGGREGATOR ===== -->
+            <g class="node-group" data-node="aggregator">
+                <rect class="node-box" x="370" y="195" width="170" height="130" fill="url(#grad-aggregator)"/>
+                <text class="node-icon" x="385" y="250">🔄</text>
+                <text class="node-title" x="420" y="245">Data Aggregator</text>
+                <text class="node-subtitle" x="385" y="268">Stream processing</text>
+                <text class="node-subtitle" x="385" y="284">Data fusion & cleaning</text>
+                <text class="node-subtitle" x="385" y="300">Time-series alignment</text>
+            </g>
+
+            <!-- ===== CENTRAL PROCESSOR ===== -->
+            <g class="node-group" data-node="processor">
+                <rect class="node-box" x="590" y="195" width="180" height="130" fill="url(#grad-processor)"/>
+                <text class="node-icon" x="605" y="250">⚙️</text>
+                <text class="node-title" x="640" y="245">Central Processor</text>
+                <text class="node-subtitle" x="605" y="268">Feature engineering</text>
+                <text class="node-subtitle" x="605" y="284">Pattern detection</text>
+                <text class="node-subtitle" x="605" y="300">Congestion classification</text>
+            </g>
+
+            <!-- ===== AI ENGINE ===== -->
+            <g class="node-group" data-node="ai">
+                <rect class="node-box" x="820" y="195" width="180" height="130" fill="url(#grad-ai)"/>
+                <text class="node-icon" x="835" y="250">🧠</text>
+                <text class="node-title" x="870" y="245">AI Engine</text>
+                <text class="node-subtitle" x="835" y="268">ML predictions</text>
+                <text class="node-subtitle" x="835" y="284">RL signal optimization</text>
+                <text class="node-subtitle" x="835" y="300">Emergency priority</text>
+            </g>
+
+            <!-- ===== SIGNAL CONTROLLER ===== -->
+            <g class="node-group" data-node="signal">
+                <rect class="node-box" x="850" y="400" width="200" height="90" fill="url(#grad-signal)"/>
+                <text class="node-icon" x="870" y="450">🚦</text>
+                <text class="node-title" x="907" y="442">Signal Controller</text>
+                <text class="node-subtitle" x="870" y="464">Adaptive phase timing</text>
+            </g>
+
+            <!-- Layer Labels -->
+            <text x="108" y="35" font-family="Inter" font-weight="600" font-size="13" fill="#38bdf8" text-anchor="middle">SENSOR LAYER</text>
+            <text x="455" y="180" font-family="Inter" font-weight="600" font-size="13" fill="#8b5cf6" text-anchor="middle">AGGREGATION</text>
+            <text x="680" y="180" font-family="Inter" font-weight="600" font-size="13" fill="#f59e0b" text-anchor="middle">PROCESSING</text>
+            <text x="910" y="180" font-family="Inter" font-weight="600" font-size="13" fill="#10b981" text-anchor="middle">AI / ML / RL</text>
+            <text x="950" y="390" font-family="Inter" font-weight="600" font-size="13" fill="#f43f5e" text-anchor="middle">ACTUATION</text>
+        </svg>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background: #0ea5e9;"></div> Sensors (Data Input)</div>
+        <div class="legend-item"><div class="legend-dot" style="background: #8b5cf6;"></div> Aggregation Layer</div>
+        <div class="legend-item"><div class="legend-dot" style="background: #f59e0b;"></div> Central Processing</div>
+        <div class="legend-item"><div class="legend-dot" style="background: #10b981;"></div> AI / ML Engine</div>
+        <div class="legend-item"><div class="legend-dot" style="background: #f43f5e;"></div> Signal Actuation</div>
+    </div>
+
+    <!-- Detail Panel (shown on click) -->
+    <div class="detail-panel" id="detailPanel">
+        <button class="close-btn" onclick="closePanel()">✕</button>
+        <h3 id="detailTitle"></h3>
+        <p id="detailText"></p>
+    </div>
+
+    <script>
+        const nodeDetails = {
+            loops: {
+                title: "🔌 Inductive Loop Detectors",
+                text: "Copper wire loops embedded beneath the road surface. When a vehicle passes over, it changes the loop's inductance, triggering a detection event. They provide highly accurate vehicle counts (95%+ accuracy) with sub-second latency. Bengaluru has ~2,000 loops installed at major intersections. Data output: binary presence signal, vehicle count per minute, occupancy percentage."
+            },
+            cctv: {
+                title: "📹 CCTV / Video Analytics",
+                text: "IP cameras mounted at intersections, processed by computer vision models (YOLO, SSD). They detect and count vehicles by type (car, bus, two-wheeler, auto), estimate queue lengths, and identify incidents (accidents, wrong-way driving). BTMC operates 5,000+ cameras in Bengaluru. Data output: vehicle count by type, queue length, incident alerts."
+            },
+            gps: {
+                title: "📡 GPS Probe Data",
+                text: "Anonymized location pings from ride-hailing apps (Ola, Uber), fleet management systems, and Google Maps. Provides speed estimation, travel time between points, and route choice patterns. Coverage depends on market penetration of these apps. Data output: average speed per road segment, travel time index, origin-destination matrices."
+            },
+            weather: {
+                title: "🌧️ Weather APIs",
+                text: "Real-time weather data from the Indian Meteorological Department (IMD) and services like OpenWeatherMap. Rain, fog, and extreme heat significantly impact traffic flow. Heavy rain in Mumbai can reduce road capacity by 30-50%. Data output: rainfall intensity, visibility, temperature, severe weather alerts."
+            },
+            aggregator: {
+                title: "🔄 Data Aggregation Layer",
+                text: "A stream processing engine (conceptually similar to Apache Kafka + Flink) that ingests data from all sensor types, aligns timestamps, handles missing readings, and fuses multi-source data into a unified traffic state per intersection per time-step. It resolves conflicts (e.g., loop says 50 vehicles, CCTV says 47) using weighted averaging based on historical sensor reliability."
+            },
+            processor: {
+                title: "⚙️ Central Processing Unit",
+                text: "The computational core that performs feature engineering (cyclical time encoding, rolling averages), pattern detection (K-Means clustering for rush hour identification), and congestion classification (Decision Tree / Random Forest classifying congestion as Low, Medium, High). Outputs enriched data ready for the AI engine."
+            },
+            ai: {
+                title: "🧠 AI / ML / RL Engine",
+                text: "The brain of the system. Uses (1) Linear Regression / Gradient Boosting for vehicle count prediction, (2) Classification models for congestion level forecasting, and (3) Q-Learning Reinforcement Learning agent that learns optimal signal timing by trial-and-error. The RL agent observes queue lengths, chooses signal phases, and receives rewards for reducing waiting time."
+            },
+            signal: {
+                title: "🚦 Adaptive Signal Controller",
+                text: "The final actuator that receives optimized phase timings from the AI engine and adjusts the traffic lights accordingly. Unlike fixed-timer signals, it can dynamically allocate green time based on real-time demand. It also supports emergency vehicle preemption — when an ambulance is detected approaching, it can force a green signal on that corridor."
+            }
+        };
+
+        document.querySelectorAll('.node-group').forEach(group => {
+            group.addEventListener('click', () => {
+                const key = group.dataset.node;
+                const info = nodeDetails[key];
+                if (info) {
+                    document.getElementById('detailTitle').textContent = info.title;
+                    document.getElementById('detailText').textContent = info.text;
+                    document.getElementById('detailPanel').classList.add('active');
+                }
+            });
+        });
+
+        function closePanel() {
+            document.getElementById('detailPanel').classList.remove('active');
+        }
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.node-group') && !e.target.closest('.detail-panel')) {
+                closePanel();
+            }
+        });
+    </script>
+</body>
+</html>

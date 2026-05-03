@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>AI Traffic Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            background: #1e293b;
+            color: white;
+        }
+
+        .header {
+            background: #0f172a;
+            padding: 20px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .container {
+            width: 90%;
+            margin: auto;
+            margin-top: 30px;
+        }
+
+        .card {
+            background: white;
+            color: black;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+        }
+
+        input {
+            padding: 10px;
+            width: 200px;
+            margin: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #2563eb;
+            color: white;
+            border: none;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        img {
+            width: 100%;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        🚦 AI Traffic Management Dashboard
+    </div>
+
+    <div class="container">
+
+        <div class="card">
+
+            <h2>Traffic Prediction</h2>
+
+            <form action="/predict" method="post">
+
+                <input type="number" name="speed" placeholder="Average Speed">
+
+                <button type="submit">Predict</button>
+
+            </form>
+
+            {% if prediction %}
+
+            <h3>Prediction Result: {{ prediction }}</h3>
+
+            {% endif %}
+
+        </div>
+
+        <div class="grid">
+
+            <div class="card">
+                <h3>K-Means Traffic Clusters</h3>
+                <img src="/static/step1_kmeans_clusters.png" width="400">
+            </div>
+
+            <div class="card">
+                <h3>Linear Regression Prediction</h3>
+                <img src="{{ url_for('static', filename='step2_linear_regression.png') }}">
+            </div>
+
+            <div class="card">
+                <h3>Decision Tree</h3>
+                <img src="{{ url_for('static', filename='step3_decision_tree.png') }}">
+            </div>
+
+            <div class="card">
+                <h3>Model Comparison</h3>
+                <img src="{{ url_for('static', filename='step4_ensemble_comparison.png') }}">
+            </div>
+
+        </div>
+        {% if lane %}
+
+        <h3>Traffic Density</h3>
+
+        North: {{ north }}
+        <div style="background:#ddd;width:100%">
+            <div style="background:red;width:{{ north }}%;height:20px"></div>
+        </div>
+
+        South: {{ south }}
+        <div style="background:#ddd;width:100%">
+            <div style="background:orange;width:{{ south }}%;height:20px"></div>
+        </div>
+
+        East: {{ east }}
+        <div style="background:#ddd;width:100%">
+            <div style="background:blue;width:{{ east }}%;height:20px"></div>
+        </div>
+
+        West: {{ west }}
+        <div style="background:#ddd;width:100%">
+            <div style="background:green;width:{{ west }}%;height:20px"></div>
+        </div>
+
+        {% endif %}
+        {% if lane %}
+
+        <h3>Priority Lane: {{ lane }}</h3>
+        <h3>Green Time: {{ time }} seconds</h3>
+
+        <h3>Total Vehicles: {{ total }}</h3>
+        <h3>Traffic Status: {{ status }}</h3>
+
+        {% endif %}
+
+
+        <div class="card">
+
+            <h2>Adaptive Traffic Signal</h2>
+
+            <form action="/optimize_signal" method="post">
+
+                <input type="number" name="north" placeholder="North Traffic">
+                <input type="number" name="south" placeholder="South Traffic">
+                <input type="number" name="east" placeholder="East Traffic">
+                <input type="number" name="west" placeholder="West Traffic">
+
+                <button type="submit">Optimize Signal</button>
+
+            </form>
+
+            {% if lane %}
+
+            <h3>Priority Lane: {{ lane }}</h3>
+            <h3>Green Time: {{ time }} seconds</h3>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>ccd
