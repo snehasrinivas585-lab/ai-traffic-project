@@ -1,46 +1,29 @@
-\# AI Traffic Management System
+# 🚦 AI Traffic Flow Optimizer
 
+## 📌 Overview
+This project is an AI-based traffic management system that optimizes traffic signal timing using data analysis and machine learning techniques to reduce congestion.
 
+---
 
-\## 📌 Overview
+## ⚙️ Features
+- 🚦 Dynamic traffic signal timing
+- 📊 Traffic congestion analysis
+- 🤖 Machine learning-based prediction
+- 🌐 Flask web interface
 
-This project is an AI-based traffic management system that uses machine learning models to analyze and optimize traffic flow.
+---
 
+## 🛠️ Tech Stack
+- Python
+- Flask
+- Machine Learning (KMeans, Linear Regression, Decision Tree)
+- Pandas, NumPy, Matplotlib
 
+---
 
-\## 🚀 Features
-
-\- Traffic prediction using ML models
-
-\- Data preprocessing and analysis
-
-\- Visualization of results
-
-\- Flask-based web interface
-
-
-
-\## 🛠️ Tech Stack
-
-\- Python
-
-\- Flask
-
-\- Machine Learning (KMeans, Linear Regression, Decision Tree)
-
-\- Pandas, NumPy, Matplotlib
-
-
-
-\## ▶️ How to Run
+## 🚀 How to Run
 
 ```bash
-
+git clone https://github.com/snehasrinivas585-lab/ai-traffic-project.git
+cd ai-traffic-project
 py notebooks/app.py
-
-\## 👤 Author
-
-Sneha Srinivas  
-
-GitHub: https://github.com/snehasrinivas585-lab
-
